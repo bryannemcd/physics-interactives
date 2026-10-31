@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Woman Walking in a Canoe - Center of Mass</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#1b2430;background:#fff;padding:12px;font-size:18px}
+  .wrap{max-width:1040px;margin:0 auto}
+  .problem{font-size:19px;line-height:1.4;margin:0 0 10px}
+  #scene{width:100%;height:auto;display:block;border:2px solid #c9d6df;border-radius:10px;background:#fff}
+  .row{display:flex;flex-wrap:wrap;gap:14px 24px;align-items:center;margin:14px 0}
+  .row .lbl{font-weight:700;margin-right:8px}
+  .seg{position:relative;display:inline-flex;border:2px solid #34495e;border-radius:10px;overflow:hidden}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg label{padding:9px 16px;cursor:pointer;font-weight:600;background:#fff;border-right:2px solid #34495e}
+  .seg label:last-of-type{border-right:0}
+  .seg input:checked+label{background:#34495e;color:#fff}
+  .seg input:focus-visible+label{outline:3px solid #f2b705;outline-offset:-3px}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  button{font:inherit;font-weight:700;padding:9px 18px;border-radius:10px;border:2px solid #34495e;background:#fff;color:#1b2430;cursor:pointer}
+  button.go{background:#34495e;color:#fff}
+  button:hover{filter:brightness(0.93)}
+  button:focus-visible{outline:3px solid #f2b705;outline-offset:2px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .card{border:2px solid #d5dee5;border-left-width:10px;border-radius:10px;padding:8px 14px}
+  .card .t{font-size:17px;font-weight:600}
+  .card .v{font-size:28px;font-weight:700;line-height:1.2}
+  .card.w{border-left-color:#d9480f}.card.w .v{color:#b53b09}
+  .card.c{border-left-color:#1565c0}.card.c .v{color:#1565c0}
+  .card.s{border-left-color:#7b1fa2}.card.s .v{color:#7b1fa2}
+  .box{border:2px solid #d5dee5;border-radius:10px;padding:10px 16px;margin-top:12px;line-height:1.55}
+  .box b.w{color:#b53b09}.box b.c{color:#1565c0}.box b.s{color:#7b1fa2}
+  .formula{margin-top:12px;font-size:19px;line-height:1.5}
+  .sliders{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 28px;margin-top:16px}
+  .sl label{display:flex;justify-content:space-between;font-weight:600;margin-bottom:2px}
+  .sl input[type=range]{width:100%;height:30px;accent-color:#34495e}
+  .sl.pos{grid-column:1 / -1}
+  .sl.pos input[type=range]{accent-color:#d9480f}
+  @media (max-width:720px){.cards,.sliders{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="problem" id="problemText"></p>
+
+  <svg id="scene" viewBox="0 0 1000 590" role="img" aria-label="A woman walking along a canoe floating beside a shoreline with trees"></svg>
+
+  <div class="row">
+    <div><span class="lbl">Origin:</span>
+      <span class="seg" role="radiogroup" aria-label="Origin behavior">
+        <input type="radio" name="mode" id="m1" value="moving" checked><label for="m1">Moves with canoe</label>
+        <input type="radio" name="mode" id="m2" value="fixed"><label for="m2">Fixed to shore</label>
+      </span>
+    </div>
+    <div><span class="lbl" id="originLbl">Origin at the canoe's:</span>
+      <span class="seg" role="radiogroup" aria-label="Origin location">
+        <input type="radio" name="origin" id="o1" value="left" checked><label for="o1">Left end</label>
+        <input type="radio" name="origin" id="o2" value="mid"><label for="o2">Middle</label>
+        <input type="radio" name="origin" id="o3" value="right"><label for="o3">Right end</label>
+      </span>
+    </div>
+    <div class="btns">
+      <button class="go" id="bFinish" type="button">Walk to finish</button>
+      <button id="bStart" type="button">Walk to start</button>
+      <button id="bReset" type="button">Reset</button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card w"><div class="t">Woman's center of mass</div><div class="v" id="vW"></div></div>
+    <div class="card c"><div class="t">Canoe's center of mass</div><div class="v" id="vC"></div></div>
+    <div class="card s"><div class="t">System's center of mass</div><div class="v" id="vS"></div></div>
+  </div>
+
+  <div class="box">
+    <div>Woman walked <b class="w" id="mvWalk"></b> relative to the canoe</div>
+    <div>Woman moved <b class="w" id="mvWoman"></b> relative to the shore</div>
+    <div>Canoe moved <b class="c" id="mvCanoe"></b> relative to the shore</div>
+    <div>System center of mass moved <b class="s" id="mvCM"></b> relative to the shore</div>
+  </div>
+
+  <div class="formula" id="formula"></div>
+
+  <div class="sliders">
+    <div class="sl pos">
+      <label for="sPos"><span>Woman's position (distance from the canoe's left end)</span><span id="lPos"></span></label>
+      <input type="range" id="sPos" min="0" max="5" step="0.01" value="1">
+    </div>
+    <div class="sl">
+      <label for="sMw"><span>Woman's mass</span><span id="lMw"></span></label>
+      <input type="range" id="sMw" min="20" max="80" step="0.5" value="45">
+    </div>
+    <div class="sl">
+      <label for="sMc"><span>Canoe's mass</span><span id="lMc"></span></label>
+      <input type="range" id="sMc" min="30" max="150" step="0.5" value="60">
+    </div>
+    <div class="sl">
+      <label for="sL"><span>Canoe's length</span><span id="lL"></span></label>
+      <input type="range" id="sL" min="3" max="6" step="0.1" value="5">
+    </div>
+    <div class="sl">
+      <label for="sD"><span>Start and finish distance from the canoe's ends</span><span id="lD"></span></label>
+      <input type="range" id="sD" min="0.25" max="2" step="0.05" value="1">
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var PPM = 57.5, XL = 40, SCENE_M = 16;      // pixels per meter, left margin, scene width in meters
+  var WATER_Y = 392, YT = WATER_Y - 14, HULL_H = 30, FEET_Y = YT + 8, RY = 520;
+  var WALK_SPEED = 1.0;                        // m/s relative to the canoe
+  var C_W = "#d9480f", C_C = "#1565c0", C_S = "#7b1fa2";
+
+  var st = { mw: 45, mc: 60, L: 5, d: 1, s: 1, origin: "left", mode: "moving", Xcm: 0, X0: 0, xw0: 0, walk: null, phase: 0 };
+  var svg = document.getElementById("scene");
+
+  function el(tag, attrs, parent) {
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) { e.setAttribute(k, attrs[k]); }
+    if (parent) { parent.appendChild(e); }
+    return e;
+  }
+  function px(wx) { return XL + wx * PPM; }
+  function fmt(v) { if (Math.abs(v) < 0.005) { v = 0; } return (v < 0 ? "\u2212" : "") + Math.abs(v).toFixed(2) + " m"; }
+  function dirText(v) {
+    if (Math.abs(v) < 0.005) { return "0.00 m"; }
+    return Math.abs(v).toFixed(2) + " m to the " + (v > 0 ? "right" : "left");
+  }
+  function leftEnd(s) { return st.Xcm - (st.mw * s + st.mc * st.L / 2) / (st.mw + st.mc); }
+  function originWorld() {
+    var base = (st.mode === "moving") ? leftEnd(st.s) : st.X0;
+    return base + (st.origin === "left" ? 0 : (st.origin === "mid" ? st.L / 2 : st.L));
+  }
+  function updateOriginLabel() {
+    document.getElementById("originLbl").textContent =
+      (st.mode === "moving") ? "Origin at the canoe's:" : "Origin at the canoe's starting:";
+  }
+
+  function reset() {
+    st.s = st.d;
+    st.X0 = SCENE_M / 2 - st.L / 2;
+    st.Xcm = st.X0 + (st.mw * st.s + st.mc * st.L / 2) / (st.mw + st.mc);
+    st.xw0 = st.X0 + st.s;
+    st.walk = null;
+  }
+
+  function hullPath(x0, x1) {
+    var w = x1 - x0;
+    return "M" + x0 + "," + (YT - 8) +
+      " Q" + (x0 + w / 2) + "," + (YT + 6) + " " + x1 + "," + (YT - 8) +
+      " Q" + (x1 - 0.04 * w) + "," + (YT + HULL_H) + " " + (x1 - 0.2 * w) + "," + (YT + HULL_H) +
+      " L" + (x0 + 0.2 * w) + "," + (YT + HULL_H) +
+      " Q" + (x0 + 0.04 * w) + "," + (YT + HULL_H) + " " + x0 + "," + (YT - 8) + " Z";
+  }
+
+  /* ---------- static scene ---------- */
+  var defs = el("defs", {}, svg);
+  var clip = el("clipPath", { id: "belowWater" }, defs);
+  el("rect", { x: 0, y: WATER_Y, width: 1000, height: 300 }, clip);
+  var mk = el("marker", { id: "arr", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto" }, defs);
+  el("path", { d: "M0,0 L10,5 L0,10 Z", fill: C_C }, mk);
+
+  el("rect", { x: 0, y: 0, width: 1000, height: 300, fill: "#dff0fb" }, svg);
+  el("path", { d: "M0,300 L0,282 Q150,238 320,280 T640,276 T1000,268 L1000,300 Z", fill: "#b9d6b0" }, svg);
+  el("rect", { x: 0, y: 296, width: 1000, height: 38, fill: "#6aa84f" }, svg);
+  el("rect", { x: 0, y: 334, width: 1000, height: 8, fill: "#e6d3a3" }, svg);
+  el("rect", { x: 0, y: 342, width: 1000, height: 163, fill: "#8fc9e8" }, svg);
+
+  var gTrees = el("g", {}, svg);
+  function tree(x, h, type) {
+    var base = 330, g = el("g", {}, gTrees);
+    el("rect", { x: x - 4, y: base - h * 0.35, width: 8, height: h * 0.35, fill: "#6b4423" }, g);
+    if (type === "pine") {
+      el("polygon", { points: x + "," + (base - h) + " " + (x - h * 0.27) + "," + (base - h * 0.45) + " " + (x + h * 0.27) + "," + (base - h * 0.45), fill: "#2e7d32" }, g);
+      el("polygon", { points: x + "," + (base - h * 0.75) + " " + (x - h * 0.34) + "," + (base - h * 0.22) + " " + (x + h * 0.34) + "," + (base - h * 0.22), fill: "#276b2b" }, g);
+    } else {
+      el("circle", { cx: x, cy: base - h * 0.64, r: h * 0.36, fill: "#3f8f3a" }, g);
+    }
+  }
+  var trees = [[70, 70, "round"], [150, 98, "pine"], [255, 62, "round"], [360, 90, "pine"], [455, 72, "round"],
+               [560, 102, "pine"], [665, 64, "round"], [770, 92, "pine"], [870, 70, "round"], [945, 86, "pine"]];
+  for (var ti = 0; ti < trees.length; ti++) { tree(trees[ti][0], trees[ti][1], trees[ti][2]); }
+
+  el("rect", { x: 0, y: 505, width: 1000, height: 85, fill: "#f1f5f8" }, svg);
+  el("line", { x1: 0, y1: 505, x2: 1000, y2: 505, stroke: "#c9d6df", "stroke-width": 2 }, svg);
+  var gRuler = el("g", {}, svg);
+  var originLine = el("line", { stroke: "#5b6b78", "stroke-width": 2, "stroke-dasharray": "3 5" }, svg);
+
+  var ghost = el("path", { fill: "none", stroke: "#5b6b78", "stroke-width": 2.5, "stroke-dasharray": "9 6" }, svg);
+
+  /* woman */
+  var gWoman = el("g", {}, svg);
+  var legL = el("g", {}, gWoman), legR = el("g", {}, gWoman);
+  el("rect", { x: -9, y: -40, width: 8, height: 40, rx: 3, fill: "#34495e" }, legL);
+  el("rect", { x: 1, y: -40, width: 8, height: 40, rx: 3, fill: "#34495e" }, legR);
+  el("line", { x1: -11, y1: -72, x2: -14, y2: -46, stroke: "#f0c8a0", "stroke-width": 6, "stroke-linecap": "round" }, gWoman);
+  el("line", { x1: 11, y1: -72, x2: 14, y2: -46, stroke: "#f0c8a0", "stroke-width": 6, "stroke-linecap": "round" }, gWoman);
+  el("rect", { x: -11, y: -78, width: 22, height: 40, rx: 7, fill: "#2a9d8f" }, gWoman);
+  el("circle", { cx: -10, cy: -84, r: 5, fill: "#4a2c17" }, gWoman);
+  el("circle", { cx: 0, cy: -86, r: 11, fill: "#f0c8a0" }, gWoman);
+  el("path", { d: "M-11,-86 A11,11 0 0 1 11,-86 Q0,-93 -11,-86 Z", fill: "#4a2c17" }, gWoman);
+  var hint = el("text", { x: 0, y: -122, "text-anchor": "middle", "font-size": 17, "font-weight": 700, fill: "#1b2430", stroke: "#fff", "stroke-width": 4, "paint-order": "stroke" }, gWoman);
+  hint.textContent = "\u25C0 drag me \u25B6";
+  var hit = el("rect", { x: -30, y: -112, width: 60, height: 124, fill: "rgba(0,0,0,0)" }, gWoman);
+  hit.style.cursor = "grab";
+  hit.style.touchAction = "none";
+
+  /* canoe */
+  var hull = el("path", { fill: "#9a5f2c", stroke: "#5d3a14", "stroke-width": 2.5, "stroke-linejoin": "round" }, svg);
+  var hullWater = el("path", { fill: "#8fc9e8", opacity: 0.6, "clip-path": "url(#belowWater)" }, svg);
+  var tickS = el("line", { stroke: "#ffe08a", "stroke-width": 3 }, svg);
+  var tickF = el("line", { stroke: "#ffe08a", "stroke-width": 3 }, svg);
+  var txtS = el("text", { "text-anchor": "middle", "font-size": 16, "font-style": "italic", fill: "#1b2430" }, svg);
+  var txtF = el("text", { "text-anchor": "middle", "font-size": 16, "font-style": "italic", fill: "#1b2430" }, svg);
+  txtS.textContent = "start"; txtF.textContent = "finish";
+
+  /* displacement arrow */
+  var arrow = el("line", { stroke: C_C, "stroke-width": 4, "marker-end": "url(#arr)" }, svg);
+  var arrowTxt = el("text", { "text-anchor": "middle", "font-size": 19, "font-weight": 700, fill: C_C }, svg);
+
+  /* center-of-mass markers */
+  var gMarks = el("g", { "pointer-events": "none" }, svg);
+  var lnS = el("line", { stroke: C_S, "stroke-width": 2.5, "stroke-dasharray": "7 5" }, gMarks);
+  var lnC = el("line", { stroke: C_C, "stroke-width": 2.5, "stroke-dasharray": "7 5" }, gMarks);
+  var lnW = el("line", { stroke: C_W, "stroke-width": 2.5, "stroke-dasharray": "7 5" }, gMarks);
+  var triS = el("polygon", { fill: C_S, stroke: "#fff", "stroke-width": 1.5 }, gMarks);
+  var triC = el("polygon", { fill: C_C, stroke: "#fff", "stroke-width": 1.5 }, gMarks);
+  var triW = el("polygon", { fill: C_W, stroke: "#fff", "stroke-width": 1.5 }, gMarks);
+  var dotC = el("rect", { width: 17, height: 17, fill: C_C, stroke: "#fff", "stroke-width": 3 }, gMarks);
+  var dotW = el("circle", { r: 9, fill: C_W, stroke: "#fff", "stroke-width": 3 }, gMarks);
+  var dotS = el("polygon", { fill: C_S, stroke: "#fff", "stroke-width": 3, "stroke-linejoin": "round" }, gMarks);
+
+  function makePill(color) {
+    var g = el("g", {}, gMarks);
+    var r = el("rect", { height: 30, rx: 15, fill: color }, g);
+    var t = el("text", { "text-anchor": "middle", "font-size": 19, "font-weight": 700, fill: "#fff" }, g);
+    return { g: g, r: r, t: t };
+  }
+  var pillS = makePill(C_S), pillW = makePill(C_W), pillC = makePill(C_C);
+  var PY_S = 16, PY_W = 54, PY_C = 92;
+  function setPill(p, cx, y, text) {
+    var w = text.length * 11 + 26;
+    var x = Math.max(w / 2 + 6, Math.min(1000 - w / 2 - 6, cx));
+    p.t.textContent = text;
+    p.t.setAttribute("x", x); p.t.setAttribute("y", y + 21);
+    p.r.setAttribute("x", x - w / 2); p.r.setAttribute("y", y); p.r.setAttribute("width", w);
+  }
+  function setLine(l, x, y1, y2) { l.setAttribute("x1", x); l.setAttribute("x2", x); l.setAttribute("y1", y1); l.setAttribute("y2", y2); }
+  function setTri(t, x) { t.setAttribute("points", x + "," + (RY + 2) + " " + (x - 8) + "," + (RY + 17) + " " + (x + 8) + "," + (RY + 17)); }
+
+  /* ---------- ruler (fixed to the shore) ---------- */
+  function buildRuler() {
+    while (gRuler.firstChild) { gRuler.removeChild(gRuler.firstChild); }
+    var o = originWorld();
+    el("line", { x1: XL, y1: RY, x2: XL + SCENE_M * PPM, y2: RY, stroke: "#34495e", "stroke-width": 2.5 }, gRuler);
+    for (var v = Math.ceil(-o); v <= Math.floor(SCENE_M - o); v++) {
+      var x = px(o + v), isO = (v === 0);
+      el("line", { x1: x, y1: RY, x2: x, y2: RY + (isO ? 14 : 9), stroke: "#34495e", "stroke-width": isO ? 4 : 2 }, gRuler);
+      var t = el("text", { x: x, y: RY + 38, "text-anchor": "middle", "font-size": 16, "font-weight": isO ? 700 : 400, fill: "#1b2430" }, gRuler);
+      t.textContent = (v < 0 ? "\u2212" : "") + Math.abs(v);
+    }
+    var ot = el("text", { x: px(o), y: RY + 62, "text-anchor": "middle", "font-size": 17, "font-weight": 700, fill: "#1b2430" }, gRuler);
+    ot.textContent = "origin (x = 0)";
+    var ut = el("text", { x: 990, y: RY + 38, "text-anchor": "end", "font-size": 16, fill: "#5b6b78" }, gRuler);
+    ut.textContent = "x (m)";
+    originLine.setAttribute("x1", px(o)); originLine.setAttribute("x2", px(o));
+    originLine.setAttribute("y1", 342); originLine.setAttribute("y2", RY);
+  }
+
+  /* ---------- render ---------- */
+  function render() {
+    var L = st.L, k = st.mw + st.mc;
+    var X = leftEnd(st.s);
+    var xw = X + st.s, xc = X + L / 2, xs = (st.mw * xw + st.mc * xc) / k;
+    if (st.mode === "moving") { buildRuler(); }
+    var o = originWorld();
+
+    var d = hullPath(px(X), px(X + L));
+    hull.setAttribute("d", d); hullWater.setAttribute("d", d);
+    ghost.setAttribute("d", hullPath(px(st.X0), px(st.X0 + L)));
+
+    var swing = st.walk ? Math.sin(st.phase) * 20 : 0;
+    gWoman.setAttribute("transform", "translate(" + px(xw) + "," + FEET_Y + ")");
+    legL.setAttribute("transform", "rotate(" + swing + " -5 -40)");
+    legR.setAttribute("transform", "rotate(" + (-swing) + " 5 -40)");
+
+    var sx = px(X + st.d), fx = px(X + L - st.d), by = YT + HULL_H;
+    tickS.setAttribute("x1", sx); tickS.setAttribute("x2", sx); tickS.setAttribute("y1", YT + 6); tickS.setAttribute("y2", YT + 20);
+    tickF.setAttribute("x1", fx); tickF.setAttribute("x2", fx); tickF.setAttribute("y1", YT + 6); tickF.setAttribute("y2", YT + 20);
+    txtS.setAttribute("x", sx); txtS.setAttribute("y", by + 22);
+    txtF.setAttribute("x", fx); txtF.setAttribute("y", by + 22);
+
+    var dispC = X - st.X0;
+    if (Math.abs(dispC) > 0.005) {
+      var a0 = px(st.X0 + L / 2), a1 = px(xc);
+      arrow.setAttribute("x1", a0); arrow.setAttribute("x2", a1); arrow.setAttribute("y1", 478); arrow.setAttribute("y2", 478);
+      arrow.setAttribute("visibility", "visible");
+      arrowTxt.setAttribute("x", (a0 + a1) / 2); arrowTxt.setAttribute("y", 466);
+      arrowTxt.textContent = "Canoe moved " + dirText(dispC);
+    } else {
+      arrow.setAttribute("visibility", "hidden");
+      arrowTxt.textContent = "";
+    }
+
+    var wy = FEET_Y - 52, cy = YT + 10;
+    var sy = (st.mw * wy + st.mc * cy) / k;
+    dotW.setAttribute("cx", px(xw)); dotW.setAttribute("cy", wy);
+    dotC.setAttribute("x", px(xc) - 8.5); dotC.setAttribute("y", cy - 8.5);
+    var sX = px(xs);
+    dotS.setAttribute("points", sX + "," + (sy - 12) + " " + (sX + 12) + "," + sy + " " + sX + "," + (sy + 12) + " " + (sX - 12) + "," + sy);
+
+    setLine(lnS, sX, PY_S + 30, RY);
+    setLine(lnW, px(xw), PY_W + 30, RY);
+    setLine(lnC, px(xc), PY_C + 30, RY);
+    setTri(triS, sX); setTri(triW, px(xw)); setTri(triC, px(xc));
+    setPill(pillS, sX, PY_S, "System CM  x = " + fmt(xs - o));
+    setPill(pillW, px(xw), PY_W, "Woman CM  x = " + fmt(xw - o));
+    setPill(pillC, px(xc), PY_C, "Canoe CM  x = " + fmt(xc - o));
+
+    /* readouts */
+    document.getElementById("vW").textContent = "x = " + fmt(xw - o);
+    document.getElementById("vC").textContent = "x = " + fmt(xc - o);
+    document.getElementById("vS").textContent = "x = " + fmt(xs - o);
+    document.getElementById("mvWalk").textContent = dirText(st.s - st.d);
+    document.getElementById("mvWoman").textContent = dirText(xw - st.xw0);
+    document.getElementById("mvCanoe").textContent = dirText(dispC);
+    var xs0 = (st.mw * st.xw0 + st.mc * (st.X0 + L / 2)) / k;
+    document.getElementById("mvCM").textContent = dirText(xs - xs0);
+    document.getElementById("formula").innerHTML =
+      "x<sub>cm</sub> = (m<sub>w</sub>x<sub>w</sub> + m<sub>c</sub>x<sub>c</sub>) / (m<sub>w</sub> + m<sub>c</sub>) = (" +
+      st.mw.toFixed(1) + " \u00D7 " + fmt(xw - o).replace(" m", "") + " + " + st.mc.toFixed(1) + " \u00D7 " + fmt(xc - o).replace(" m", "") +
+      ") / " + k.toFixed(1) + " = <b style=\"color:" + C_S + "\">" + fmt(xs - o) + "</b>";
+
+    var sPos = document.getElementById("sPos");
+    if (document.activeElement !== sPos) { sPos.value = st.s.toFixed(2); }
+    document.getElementById("lPos").textContent = st.s.toFixed(2) + " m";
+  }
+
+  function updateLabels() {
+    document.getElementById("lMw").textContent = st.mw.toFixed(1) + " kg";
+    document.getElementById("lMc").textContent = st.mc.toFixed(1) + " kg";
+    document.getElementById("lL").textContent = st.L.toFixed(2) + " m";
+    document.getElementById("lD").textContent = st.d.toFixed(2) + " m";
+    document.getElementById("problemText").textContent =
+      "A " + st.mw.toFixed(1) + " kg woman stands in a " + st.mc.toFixed(1) + " kg canoe of length " + st.L.toFixed(2) +
+      " m. She walks from a point " + st.d.toFixed(2) + " m from one end to a point " + st.d.toFixed(2) +
+      " m from the other end. The water's resistance is negligible. How far does the canoe move?";
+  }
+
+  /* ---------- controls ---------- */
+  function onParam() {
+    st.mw = +document.getElementById("sMw").value;
+    st.mc = +document.getElementById("sMc").value;
+    st.L = +document.getElementById("sL").value;
+    var dS = document.getElementById("sD");
+    var dmax = Math.min(2, Math.floor((st.L / 2 - 0.1) * 20) / 20);
+    dS.max = dmax;
+    st.d = Math.min(+dS.value, dmax);
+    dS.value = st.d;
+    document.getElementById("sPos").max = st.L;
+    reset(); updateLabels(); buildRuler(); render();
+  }
+  ["sMw", "sMc", "sL", "sD"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", onParam);
+  });
+  document.getElementById("sPos").addEventListener("input", function () {
+    st.walk = null; hideHint();
+    st.s = Math.max(0, Math.min(st.L, +this.value));
+    render();
+  });
+  ["m1", "m2"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", function () {
+      st.mode = this.value; updateOriginLabel(); buildRuler(); render();
+    });
+  });
+  ["o1", "o2", "o3"].forEach(function (id) {
+    document.getElementById(id).addEventListener("change", function () {
+      st.origin = this.value; buildRuler(); render();
+    });
+  });
+
+  function hideHint() { hint.setAttribute("visibility", "hidden"); }
+
+  function walkTo(target) {
+    hideHint();
+    var running = st.walk !== null;
+    st.walk = { target: target, last: null };
+    if (!running) { window.requestAnimationFrame(step); }
+  }
+  function step(t) {
+    var w = st.walk;
+    if (!w) { render(); return; }
+    if (w.last === null) { w.last = t; }
+    var dt = Math.min(0.05, (t - w.last) / 1000);
+    w.last = t;
+    var ds = WALK_SPEED * dt;
+    st.phase += dt * 9;
+    if (Math.abs(w.target - st.s) <= ds) { st.s = w.target; st.walk = null; }
+    else { st.s += (w.target > st.s ? 1 : -1) * ds; }
+    render();
+    if (st.walk) { window.requestAnimationFrame(step); }
+  }
+  document.getElementById("bFinish").addEventListener("click", function () { walkTo(st.L - st.d); });
+  document.getElementById("bStart").addEventListener("click", function () { walkTo(st.d); });
+  document.getElementById("bReset").addEventListener("click", function () { reset(); render(); });
+
+  /* drag the woman */
+  var drag = null;
+  function svgX(e) {
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  hit.addEventListener("pointerdown", function (e) {
+    st.walk = null; hideHint();
+    var xw = leftEnd(st.s) + st.s;
+    drag = { off: (svgX(e) - XL) / PPM - xw };
+    hit.style.cursor = "grabbing";
+    if (hit.setPointerCapture) { hit.setPointerCapture(e.pointerId); }
+    e.preventDefault();
+  });
+  hit.addEventListener("pointermove", function (e) {
+    if (!drag) { return; }
+    var target = (svgX(e) - XL) / PPM - drag.off;
+    var k = st.mw + st.mc;
+    var s = (target - st.Xcm + st.mc * st.L / (2 * k)) * k / st.mc;
+    st.s = Math.max(0, Math.min(st.L, s));
+    render();
+  });
+  function endDrag() { drag = null; hit.style.cursor = "grab"; }
+  hit.addEventListener("pointerup", endDrag);
+  hit.addEventListener("pointercancel", endDrag);
+
+  /* init */
+  reset(); updateLabels(); updateOriginLabel(); buildRuler(); render();
+})();
+</script>
+</body>
+</html>

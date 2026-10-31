@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Directions of angular velocity and angular acceleration</title>
+<style>
+:root{
+  --bg:#F2F5F8; --panel:#FFFFFF; --ink:#132033; --muted:#55637A; --line:#C5CFDB;
+  --disk:#DDE5EE; --diskEdge:#7E8DA1; --omega:#1B5FD0; --alpha:#BE1F74;
+  --good:#1D7A47; --bad:#B42318;
+  --sans:"Segoe UI","Helvetica Neue",Helvetica,Arial,system-ui,sans-serif;
+  --math:"Cambria Math",Cambria,"Times New Roman",Times,serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1620; --panel:#18212C; --ink:#E8EDF3; --muted:#9AA6B5; --line:#34414F;
+    --disk:#2A3644; --diskEdge:#6F7F93; --omega:#72A9FF; --alpha:#FF6DB4;
+    --good:#5CCB8C; --bad:#FF8A80; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1620; --panel:#18212C; --ink:#E8EDF3; --muted:#9AA6B5; --line:#34414F;
+  --disk:#2A3644; --diskEdge:#6F7F93; --omega:#72A9FF; --alpha:#FF6DB4;
+  --good:#5CCB8C; --bad:#FF8A80; color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{font-size:20px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.4}
+.wrap{max-width:1560px;margin:0 auto;padding:16px 20px 28px}
+.sym{font-family:var(--math);font-style:italic;font-weight:700}
+.w{color:var(--omega)} .a{color:var(--alpha)}
+body.novec .vec{display:none !important}
+
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-bottom:14px}
+h1{font-size:1.55rem;margin:0;font-weight:700;letter-spacing:-0.01em}
+h1 .sym{font-size:1.15em}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tab{font:inherit;font-size:1rem;font-weight:600;border:0;background:transparent;color:var(--muted);padding:.4em 1.1em;border-radius:9px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--ink);color:var(--panel)}
+.toggle{display:flex;align-items:center;gap:.5em;font-size:1rem;cursor:pointer;user-select:none}
+.toggle input{width:1.25em;height:1.25em;accent-color:var(--ink);cursor:pointer}
+.conv{flex-basis:100%;margin:0;font-size:1rem;color:var(--muted)}
+.conv strong{color:var(--ink)}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:0}
+.card svg{display:block;width:100%;height:auto}
+figcaption,.note{font-size:.85rem;color:var(--muted);margin:6px 0 0}
+
+.explore{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:20px;align-items:start}
+#viewE{max-height:66vh}
+.rhr{font-size:.95rem;margin:14px 2px 0;max-width:64ch}
+.presets{margin-top:14px}
+.presets p{margin:0 0 6px;font-weight:600;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.side{display:flex;flex-direction:column;gap:12px}
+.readouts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ro{padding:10px 14px}
+.ro .big{font-size:1.6rem;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+.ro .sub{font-size:.95rem;color:var(--muted)}
+.ro.wbox{border-left:6px solid var(--omega)}
+.ro.abox{border-left:6px solid var(--alpha)}
+.status{margin:0;font-size:1.1rem;font-weight:600;min-height:2.8em}
+.controls{display:grid;gap:10px}
+.slider label{display:flex;justify-content:space-between;align-items:baseline;font-size:1rem;gap:10px}
+.slider output{font-weight:700;font-variant-numeric:tabular-nums}
+.slider input{width:100%;accent-color:var(--ink);height:28px;cursor:pointer}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.time{font-size:1.05rem;font-variant-numeric:tabular-nums;margin-left:auto;color:var(--muted)}
+
+.btn{font:inherit;font-size:1rem;font-weight:600;padding:.5em 1.1em;border-radius:10px;border:2px solid var(--ink);background:var(--panel);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--ink);color:var(--panel)}
+.btn:disabled{opacity:.4;cursor:default}
+.chip{font:inherit;font-size:.9rem;padding:.35em .85em;border-radius:999px;border:2px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--ink)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--omega);outline-offset:2px}
+
+.practice{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.stim .prompt{margin:0 0 8px;font-size:1.05rem;font-weight:600}
+#viewP,#viewQ{max-height:58vh}
+#qViewWrap{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}
+.loopbar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px}
+.loopbar div{height:100%;width:0;background:var(--muted)}
+.qs{display:flex;flex-direction:column}
+.score{font-size:1rem;color:var(--muted);margin-bottom:10px}
+fieldset.q{border:0;padding:0;margin:0 0 16px}
+fieldset.q legend{font-weight:700;font-size:1.05rem;margin-bottom:6px;padding:0}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{font:inherit;font-size:.95rem;padding:.45em .95em;border:2px solid var(--line);border-radius:999px;background:var(--panel);color:var(--ink);cursor:pointer}
+.opt:hover{border-color:var(--ink)}
+.opt[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--panel)}
+.opt.is-correct{border-color:var(--good);box-shadow:inset 0 0 0 2px var(--good)}
+.opt.is-correct::after{content:" \2713";font-weight:700}
+.opt.is-correct[aria-pressed="true"]{background:var(--good);border-color:var(--good);color:#fff;box-shadow:none}
+.opt.is-wrong[aria-pressed="true"]{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.is-wrong[aria-pressed="true"]::after{content:" \2717";font-weight:700}
+.actions{display:flex;gap:10px;margin-top:4px}
+.feedback{margin-top:14px;font-size:1rem}
+.feedback .head{font-weight:700;font-size:1.1rem;margin:0 0 6px}
+.feedback p{margin:0 0 6px;max-width:64ch}
+.feedback .warn{color:var(--bad);font-weight:600}
+
+/* svg */
+.disk-face{fill:var(--disk);stroke:var(--diskEdge);stroke-width:3}
+.disk-side{fill:var(--diskEdge)}
+.spoke{stroke:var(--diskEdge);stroke-width:5;stroke-linecap:round}
+.mark{fill:var(--ink)}
+.refline{stroke:var(--ink);stroke-width:3;stroke-dasharray:12 8;fill:none}
+.axisline{stroke:var(--muted);stroke-width:2.5;stroke-dasharray:7 7}
+.hub{fill:var(--ink)}
+.w-stroke{stroke:var(--omega);fill:none}
+.a-stroke{stroke:var(--alpha);fill:none}
+.w-fill{fill:var(--omega)}
+.a-fill{fill:var(--alpha)}
+.arc{stroke-width:7;stroke-linecap:round;stroke-linejoin:round}
+.vline{stroke-width:7;stroke-linecap:round}
+.svg-sym{font-family:var(--math);font-style:italic;font-weight:700;font-size:30px}
+.small{fill:var(--muted);font-size:17px;font-family:var(--sans)}
+.axis{stroke:var(--muted);stroke-width:2}
+.zero{stroke:var(--ink);stroke-width:2.5}
+.tick{fill:var(--muted);font-size:17px;font-family:var(--sans)}
+.atitle{fill:var(--ink);font-size:19px;font-family:var(--sans)}
+.atitle .it{font-family:var(--math);font-style:italic;font-weight:700;font-size:22px}
+.mlabel{fill:var(--ink);font-weight:700}
+.gline{stroke-width:5;stroke-linecap:round}
+.future{opacity:.28}
+.dot{fill:var(--omega);stroke:var(--panel);stroke-width:3}
+.mline{stroke:var(--muted);stroke-width:2;stroke-dasharray:6 6}
+
+@media (max-width: 980px){
+  html{font-size:18px}
+  .explore,.practice{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width: 560px){
+  html{font-size:16px}
+  .readouts{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Which way do <span class="sym w">ω</span> and <span class="sym a">α</span> point?</h1>
+    <div class="tabs" role="tablist" aria-label="Mode">
+      <button class="tab" role="tab" id="tabExplore" aria-selected="true" aria-controls="explore">Explore</button>
+      <button class="tab" role="tab" id="tabPractice" aria-selected="false" aria-controls="practice">Practice</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="vecToggle" checked> Show vectors (right-hand rule)</label>
+    <p class="conv"><strong>Sign convention:</strong> counterclockwise rotation (seen from above) is positive, clockwise rotation is negative.</p>
+  </header>
+
+  <!-- EXPLORE -->
+  <section id="explore" class="explore" role="tabpanel" aria-labelledby="tabExplore">
+    <div>
+      <figure class="card">
+        <svg id="viewE" viewBox="0 0 560 490" role="img" aria-label="Tilted rotating disk with curved arrows and axis vectors for angular velocity and angular acceleration"></svg>
+        <figcaption>The disk seen from slightly above. The dashed line across the disk stays fixed; the spokes and black dot turn with the disk.</figcaption>
+      </figure>
+      <p class="rhr vec"><strong>Right-hand rule:</strong> curl the fingers of your right hand in the direction the disk turns; your thumb points along <span class="sym w">ω</span>. Counterclockwise (seen from above) gives <span class="sym w">ω</span> pointing up; clockwise gives <span class="sym w">ω</span> pointing down.</p>
+      <div class="presets">
+        <p>Try a case</p>
+        <div class="chips" id="chips"></div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="readouts">
+        <div class="card ro wbox"><div class="big" id="roW"></div><div class="sub" id="roWsub"></div></div>
+        <div class="card ro abox"><div class="big" id="roA"></div><div class="sub" id="roAsub"></div></div>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+      <figure class="card">
+        <svg id="graphE" viewBox="0 0 560 340" role="img" aria-label="Graph of angular velocity versus time"></svg>
+        <figcaption>Angular velocity vs. time. The slope of the line is <span class="sym a">α</span>.</figcaption>
+      </figure>
+      <div class="card controls">
+        <div class="slider">
+          <label for="sW0"><span>Starting angular velocity <span class="sym w">ω</span><sub>0</sub></span><output id="oW0"></output></label>
+          <input type="range" id="sW0" min="-4" max="4" step="0.5">
+        </div>
+        <div class="slider">
+          <label for="sA"><span>Angular acceleration <span class="sym a">α</span></span><output id="oA"></output></label>
+          <input type="range" id="sA" min="-0.8" max="0.8" step="0.1">
+        </div>
+        <div class="row">
+          <button class="btn primary" id="playBtn">Play</button>
+          <button class="btn" id="restartBtn">Restart</button>
+          <span class="time" id="timeRo"></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRACTICE -->
+  <section id="practice" class="practice" role="tabpanel" aria-labelledby="tabPractice" hidden>
+    <div class="card stim">
+      <p class="prompt" id="pPrompt"></p>
+      <div id="animWrap">
+        <svg id="viewP" viewBox="0 0 560 490" role="img" aria-label="Rotating disk for the practice question"></svg>
+        <div class="loopbar"><div id="loopFill"></div></div>
+        <p class="note">Each clip lasts 4 seconds, then repeats.</p>
+      </div>
+      <div id="graphWrap" hidden>
+        <svg id="graphP" viewBox="0 0 560 340" role="img" aria-label="Angular velocity versus time graph for the practice question"></svg>
+      </div>
+      <div id="qViewWrap" hidden>
+        <svg id="viewQ" viewBox="0 0 560 490" role="img" aria-label="The disk at the marked instant"></svg>
+        <p class="note" id="qViewNote"></p>
+      </div>
+    </div>
+    <div class="qs">
+      <div class="score" id="score">Score: 0 of 0</div>
+      <div id="qRows"></div>
+      <div class="actions">
+        <button class="btn primary" id="checkBtn">Check answers</button>
+        <button class="btn" id="nextBtn">Next question</button>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg';
+  var MINUS = '\u2212';
+
+  /* ---------- helpers ---------- */
+  function el(tag, attrs, parent){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs){ if (attrs.hasOwnProperty(k)) e.setAttribute(k, attrs[k]); }
+    if (parent) parent.appendChild(e);
+    return e;
+  }
+  function $(id){ return document.getElementById(id); }
+  function r1(n){ return Math.round(n * 10) / 10; }
+  function sgn(v, eps){ return Math.abs(v) < eps ? 0 : (v > 0 ? 1 : -1); }
+  function fmtSigned(v, d){
+    var s = Math.abs(v).toFixed(d);
+    if (Number(s) === 0) return '0';
+    return (v > 0 ? '+' : MINUS) + s;
+  }
+  function show(e, on){ e.style.display = on ? '' : 'none'; }
+  function signWord(s){ return s > 0 ? 'positive' : (s < 0 ? 'negative' : 'zero'); }
+  function symHTML(s){
+    return s.replace(/ω/g, '<span class="sym w">ω</span>').replace(/α/g, '<span class="sym a">α</span>');
+  }
+  function vecOn(){ return $('vecToggle').checked; }
+
+  /* ---------- tilted disk view ----------
+     A point at angle phi (counterclockwise seen from above, phi = 0 to the right)
+     and radius r in the disk's plane projects to
+     x = cx + r cos(phi),  y = cy - k r sin(phi).
+     Because we look from above the plane, counterclockwise stays counterclockwise on screen. */
+  function buildView(svg){
+    var V = {cx: 266, cy: 230, R: 170, k: 0.38, h: 20};
+    V.P = function(r, phi){ return [V.cx + r * Math.cos(phi), V.cy - V.k * r * Math.sin(phi)]; };
+    var ry = V.k * V.R;
+
+    el('line', {x1: V.cx, y1: 40, x2: V.cx, y2: 480, 'class': 'axisline'}, svg);   // axle, behind
+    V.back = el('g', {}, svg);                                                        // downward vectors live here
+    el('ellipse', {cx: V.cx, cy: V.cy + V.h, rx: V.R, ry: r1(ry), 'class': 'disk-side'}, svg);
+    el('rect', {x: V.cx - V.R, y: V.cy, width: 2 * V.R, height: V.h, 'class': 'disk-side'}, svg);
+    el('ellipse', {cx: V.cx, cy: V.cy, rx: V.R, ry: r1(ry), 'class': 'disk-face'}, svg);
+
+    V.spokes = [];
+    for (var i = 0; i < 3; i++) V.spokes.push(el('line', {x1: V.cx, y1: V.cy, x2: V.cx, y2: V.cy, 'class': 'spoke'}, svg));
+    V.mark = el('ellipse', {rx: 13, ry: r1(13 * V.k + 2), 'class': 'mark'}, svg);
+
+    var pe = V.P(V.R + 46, Math.PI);
+    el('line', {x1: V.cx, y1: V.cy, x2: r1(pe[0]), y2: r1(pe[1]), 'class': 'refline'}, svg);  // fixed reference line
+    el('line', {x1: V.cx, y1: V.cy, x2: V.cx, y2: 40, 'class': 'axisline'}, svg);            // axle above the face
+    el('ellipse', {cx: V.cx, cy: V.cy, rx: 9, ry: 5, 'class': 'hub'}, svg);
+
+    V.front = el('g', {}, svg);                                                       // upward vectors live here
+    function vec(cls){
+      var g = el('g', {'class': 'vec'}, V.front);
+      var o = {g: g, place: V.front,
+        line: el('line', {'class': cls + '-stroke vline'}, g),
+        head: el('path', {'class': cls + '-fill'}, g),
+        lab: el('text', {'class': 'svg-sym ' + cls + '-fill', 'text-anchor': 'middle', 'dominant-baseline': 'central'}, g)};
+      return o;
+    }
+    V.wv = vec('w'); V.wv.lab.textContent = 'ω';
+    V.av = vec('a'); V.av.lab.textContent = 'α';
+
+    function arc(cls, label){
+      var o = {path: el('path', {'class': 'arc ' + cls + '-stroke'}, svg), head: el('path', {'class': cls + '-fill'}, svg),
+               lab: el('text', {'class': 'svg-sym ' + cls + '-fill', 'text-anchor': 'middle', 'dominant-baseline': 'central'}, svg)};
+      o.lab.textContent = label;
+      return o;
+    }
+    V.wa = arc('w', 'ω'); V.aa = arc('a', 'α');
+    return V;
+  }
+
+  function placeVec(V, o, x, dir, frac){
+    if (!dir){ show(o.g, false); return; }
+    show(o.g, true);
+    var target = dir > 0 ? V.front : V.back;
+    if (o.place !== target){ target.appendChild(o.g); o.place = target; }
+    var L = 24 + 120 * frac;
+    // upward vectors start at the face; downward ones run behind the disk and emerge below it
+    var tip = dir > 0 ? V.cy - L : V.cy + V.k * V.R + V.h + L;
+    var base = tip + dir * 18;
+    o.line.setAttribute('x1', x); o.line.setAttribute('y1', V.cy);
+    o.line.setAttribute('x2', x); o.line.setAttribute('y2', r1(base));
+    o.head.setAttribute('d', 'M' + x + ' ' + r1(tip - dir * 4) + ' L' + (x - 12) + ' ' + r1(base) + ' L' + (x + 12) + ' ' + r1(base) + ' Z');
+    o.lab.setAttribute('x', x + (x < V.cx ? -24 : 24)); o.lab.setAttribute('y', r1(tip + dir * 8));
+  }
+
+  function placeArc(V, o, r, sweepDeg, dir){
+    if (!dir){ show(o.path, false); show(o.head, false); show(o.lab, false); return; }
+    show(o.path, true); show(o.head, true); show(o.lab, true);
+    var s = sweepDeg * Math.PI / 180, phi0 = -dir * s / 2, phi1 = dir * s / 2, da = 22 / r;
+    var end = phi1 - dir * da, N = 28, d = '';
+    for (var i = 0; i <= N; i++){
+      var p = V.P(r, phi0 + (end - phi0) * i / N);
+      d += (i ? ' L' : 'M') + r1(p[0]) + ' ' + r1(p[1]);
+    }
+    o.path.setAttribute('d', d);
+    var tip = V.P(r, phi1), b = V.P(r, end);
+    var dx = tip[0] - b[0], dy = tip[1] - b[1], Ln = Math.sqrt(dx * dx + dy * dy) || 1;
+    dx /= Ln; dy /= Ln;
+    var nx = -dy, ny = dx, hw = 12, tl = 20;
+    o.head.setAttribute('d', 'M' + r1(b[0] + dx * tl) + ' ' + r1(b[1] + dy * tl) +
+      ' L' + r1(b[0] + nx * hw) + ' ' + r1(b[1] + ny * hw) + ' L' + r1(b[0] - nx * hw) + ' ' + r1(b[1] - ny * hw) + ' Z');
+    o.lab.setAttribute('x', r1(V.cx + r + 22)); o.lab.setAttribute('y', V.cy);   // label beside the arc's midpoint
+  }
+
+  function drawView(V, theta, w, a, arrows, aScale){
+    for (var i = 0; i < 3; i++){
+      var p = V.P(V.R - 8, theta + i * 2 * Math.PI / 3);
+      V.spokes[i].setAttribute('x2', r1(p[0])); V.spokes[i].setAttribute('y2', r1(p[1]));
+    }
+    var m = V.P(V.R - 34, theta + Math.PI / 3);
+    V.mark.setAttribute('cx', r1(m[0])); V.mark.setAttribute('cy', r1(m[1]));
+    var wd = arrows ? sgn(w, 0.05) : 0, ad = arrows ? sgn(a, 0.005) : 0;
+    var fw = Math.min(Math.abs(w) / 12, 1), fa = Math.min(Math.abs(a) / aScale, 1);
+    placeVec(V, V.wv, V.cx - 16, wd, fw);
+    placeVec(V, V.av, V.cx + 16, ad, fa);
+    placeArc(V, V.wa, V.R + 22, 24 + 126 * fw, wd);
+    placeArc(V, V.aa, V.R + 70, 24 + 126 * fa, ad);
+  }
+
+  /* ---------- ω vs t graph ---------- */
+  var GX0 = 70, GX1 = 540, GY0 = 18, GY1 = 280, TMAX = 10, WMAX = 12;
+  function GX(t){ return GX0 + t / TMAX * (GX1 - GX0); }
+  function GY(w){ return GY0 + (WMAX - w) / (2 * WMAX) * (GY1 - GY0); }
+  function buildGraph(svg){
+    var g = {}, i, t;
+    el('line', {x1: GX0, y1: GY0, x2: GX0, y2: GY1, 'class': 'axis'}, svg);
+    el('line', {x1: GX0, y1: GY1, x2: GX1, y2: GY1, 'class': 'axis'}, svg);
+    el('line', {x1: GX0, y1: GY(0), x2: GX1, y2: GY(0), 'class': 'zero'}, svg);
+    var wt = [-10, -5, 0, 5, 10];
+    for (i = 0; i < wt.length; i++){
+      el('line', {x1: GX0 - 6, y1: GY(wt[i]), x2: GX0, y2: GY(wt[i]), 'class': 'axis'}, svg);
+      t = el('text', {x: GX0 - 12, y: GY(wt[i]), 'text-anchor': 'end', 'dominant-baseline': 'central', 'class': 'tick'}, svg);
+      t.textContent = wt[i] < 0 ? MINUS + Math.abs(wt[i]) : String(wt[i]);
+    }
+    for (i = 0; i <= 10; i += 2){
+      el('line', {x1: GX(i), y1: GY1, x2: GX(i), y2: GY1 + 6, 'class': 'axis'}, svg);
+      t = el('text', {x: GX(i), y: GY1 + 25, 'text-anchor': 'middle', 'class': 'tick'}, svg);
+      t.textContent = String(i);
+    }
+    var yt = el('text', {x: 20, y: (GY0 + GY1) / 2, 'text-anchor': 'middle', 'class': 'atitle', transform: 'rotate(-90 20 ' + (GY0 + GY1) / 2 + ')'}, svg);
+    el('tspan', {'class': 'it'}, yt).textContent = 'ω';
+    el('tspan', {}, yt).textContent = ' (rad/s)';
+    var xt = el('text', {x: GX1, y: GY1 + 50, 'text-anchor': 'end', 'class': 'atitle'}, svg);
+    el('tspan', {'class': 'it'}, xt).textContent = 't';
+    el('tspan', {}, xt).textContent = ' (s)';
+    g.mline = el('line', {'class': 'mline'}, svg);
+    g.future = el('path', {'class': 'w-stroke gline future'}, svg);
+    g.trail = el('path', {'class': 'w-stroke gline'}, svg);
+    g.dot = el('circle', {r: 9, 'class': 'dot'}, svg);
+    g.mlab = el('text', {'class': 'tick mlabel', 'text-anchor': 'middle'}, svg);
+    return g;
+  }
+  function drawGraph(g, w0, a, t, mode){
+    function seg(t0, t1){
+      return 'M' + r1(GX(t0)) + ' ' + r1(GY(w0 + a * t0)) + ' L' + r1(GX(t1)) + ' ' + r1(GY(w0 + a * t1));
+    }
+    if (mode === 'explore'){
+      show(g.future, true); g.future.setAttribute('d', seg(0, TMAX));
+      g.trail.setAttribute('d', seg(0, Math.max(t, 0.001)));
+      show(g.mline, false); show(g.mlab, false);
+    } else {
+      show(g.future, false);
+      g.trail.setAttribute('d', seg(0, TMAX));
+      show(g.mline, true); show(g.mlab, true);
+      g.mline.setAttribute('x1', r1(GX(t))); g.mline.setAttribute('x2', r1(GX(t)));
+      g.mline.setAttribute('y1', GY1); g.mline.setAttribute('y2', r1(GY(w0 + a * t)));
+      g.mlab.setAttribute('x', r1(GX(t))); g.mlab.setAttribute('y', GY1 + 50);
+      g.mlab.textContent = 't = ' + t + ' s';
+    }
+    g.dot.setAttribute('cx', r1(GX(t))); g.dot.setAttribute('cy', r1(GY(w0 + a * t)));
+  }
+
+  /* =====================  EXPLORE  ===================== */
+  var vE = buildView($('viewE')), gE = buildGraph($('graphE'));
+  var E = {w0: 1, a: 0.5, t: 0, theta: 0, running: false};
+  var A_SCALE_E = 0.8;
+  function wAt(t){ return E.w0 + E.a * t; }
+
+  function statusText(w, a){
+    var wd = sgn(w, 0.05), ad = sgn(a, 0.005);
+    if (!wd){
+      if (!ad) return 'ω = 0 and α = 0: the disk is not turning.';
+      return 'ω = 0 at this instant: the disk is momentarily at rest and is about to turn ' + (ad > 0 ? 'counterclockwise.' : 'clockwise.');
+    }
+    if (!ad) return 'α = 0: ω is not changing, so the disk turns at a constant rate.';
+    if (wd === ad) return 'ω and α have the same sign, so the disk is speeding up.';
+    return 'ω and α have opposite signs, so the disk is slowing down.';
+  }
+
+  function updateExplore(){
+    var w = wAt(E.t);
+    drawView(vE, E.theta, w, E.a, true, A_SCALE_E);
+    drawGraph(gE, E.w0, E.a, E.t, 'explore');
+    $('roW').innerHTML = '<span class="sym w">ω</span> = ' + fmtSigned(w, 1) + ' rad/s';
+    var wd = sgn(w, 0.05);
+    $('roWsub').textContent = wd > 0 ? 'turning counterclockwise' : (wd < 0 ? 'turning clockwise' : 'momentarily at rest');
+    $('roA').innerHTML = '<span class="sym a">α</span> = ' + fmtSigned(E.a, 1) + ' rad/s²';
+    var ad = sgn(E.a, 0.005);
+    $('roAsub').textContent = ad > 0 ? 'ω is increasing' : (ad < 0 ? 'ω is decreasing' : 'ω is not changing');
+    $('status').innerHTML = symHTML(statusText(w, E.a));
+    $('timeRo').innerHTML = '<span class="sym">t</span> = ' + E.t.toFixed(1) + ' s';
+  }
+
+  function setPlayLabel(){ $('playBtn').textContent = E.running ? 'Pause' : (E.t >= TMAX ? 'Play again' : 'Play'); }
+  function restartExplore(){ E.t = 0; E.theta = 0; setPlayLabel(); updateExplore(); }
+  function syncSliders(){
+    $('sW0').value = E.w0; $('sA').value = E.a;
+    $('oW0').textContent = fmtSigned(E.w0, 1) + ' rad/s';
+    $('oA').textContent = fmtSigned(E.a, 1) + ' rad/s²';
+  }
+
+  $('sW0').addEventListener('input', function(){ E.w0 = parseFloat(this.value); syncSliders(); restartExplore(); });
+  $('sA').addEventListener('input', function(){ E.a = parseFloat(this.value); syncSliders(); restartExplore(); });
+  $('playBtn').addEventListener('click', function(){
+    if (E.t >= TMAX){ E.t = 0; E.theta = 0; }
+    E.running = !E.running; setPlayLabel(); updateExplore();
+  });
+  $('restartBtn').addEventListener('click', function(){ restartExplore(); });
+
+  var PRESETS = [
+    ['Counterclockwise, speeding up', 1, 0.6],
+    ['Counterclockwise, slowing down', 4, -0.6],
+    ['Clockwise, speeding up', -1, -0.6],
+    ['Clockwise, slowing down', -4, 0.6],
+    ['Constant rate', 3, 0],
+    ['Slows, stops, reverses', 3, -0.6]
+  ];
+  (function(){
+    var box = $('chips');
+    for (var i = 0; i < PRESETS.length; i++){
+      (function(p){
+        var b = document.createElement('button');
+        b.className = 'chip'; b.type = 'button'; b.textContent = p[0];
+        b.addEventListener('click', function(){
+          E.w0 = p[1]; E.a = p[2]; syncSliders(); E.t = 0; E.theta = 0; E.running = true; setPlayLabel(); updateExplore();
+        });
+        box.appendChild(b);
+      })(PRESETS[i]);
+    }
+  })();
+
+  /* =====================  PRACTICE  ===================== */
+  var vP = buildView($('viewP')), vQ = buildView($('viewQ')), gP = buildGraph($('graphP'));
+  var A_SCALE_P = 2;
+  var P = {q: null, answers: {}, revealed: false, theta: 0, start: 0, n: 0, correct: 0};
+
+  var ROWS = [
+    {key: 'w', legend: 'Sign of ω', opts: [[1, 'Positive (counterclockwise)'], [-1, 'Negative (clockwise)']]},
+    {key: 'a', legend: 'Sign of α', opts: [[1, 'Positive'], [-1, 'Negative'], [0, 'Zero']]},
+    {key: 'm', legend: 'The disk is', opts: [['up', 'Speeding up'], ['down', 'Slowing down'], ['const', 'Turning at a constant rate']]},
+    {key: 'wv', vec: true, legend: 'The ω vector points', opts: [[1, 'Up'], [-1, 'Down']]},
+    {key: 'av', vec: true, legend: 'The α vector points', opts: [[1, 'Up'], [-1, 'Down'], [0, 'No α vector (α = 0)']]}
+  ];
+  var BTN = {};
+  (function(){
+    var host = $('qRows');
+    for (var i = 0; i < ROWS.length; i++){
+      var row = ROWS[i];
+      var fs = document.createElement('fieldset');
+      fs.className = 'q' + (row.vec ? ' vec' : '');
+      var lg = document.createElement('legend');
+      lg.innerHTML = symHTML(row.legend);
+      fs.appendChild(lg);
+      var box = document.createElement('div'); box.className = 'opts';
+      BTN[row.key] = [];
+      for (var j = 0; j < row.opts.length; j++){
+        (function(key, val, label){
+          var b = document.createElement('button');
+          b.type = 'button'; b.className = 'opt'; b.setAttribute('aria-pressed', 'false');
+          b.innerHTML = symHTML(label);
+          b.addEventListener('click', function(){
+            if (P.revealed) return;
+            P.answers[key] = val;
+            var list = BTN[key];
+            for (var k = 0; k < list.length; k++) list[k].btn.setAttribute('aria-pressed', list[k].v === val ? 'true' : 'false');
+          });
+          BTN[key].push({v: val, btn: b});
+          box.appendChild(b);
+        })(row.key, row.opts[j][0], row.opts[j][1]);
+      }
+      fs.appendChild(box);
+      host.appendChild(fs);
+    }
+  })();
+
+  function pick(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function makeAnimQ(){
+    var ws = pick([1, -1]);
+    var m = pick(['up', 'up', 'down', 'down', 'const']);
+    var w0, a;
+    if (m === 'const'){ w0 = ws * pick([3, 4, 5]); a = 0; }
+    else if (m === 'up'){ w0 = ws * 1.5; a = ws * 1.5; }
+    else { w0 = ws * 7.5; a = -ws * 1.5; }
+    var as = sgn(a, 1e-6);
+    return {type: 'anim', w0: w0, a: a, dur: 4, ans: {w: ws, a: as, m: m, wv: ws, av: as}};
+  }
+
+  function makeGraphQ(){
+    var AS = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2];
+    for (var tries = 0; tries < 500; tries++){
+      var a = pick(AS);
+      var w0 = Math.floor(Math.random() * 23) - 11;
+      if (Math.abs(w0 + 10 * a) > 11) continue;
+      var t = 1 + Math.floor(Math.random() * 8);
+      var w = w0 + a * t;
+      if (Math.abs(w) < 2) continue;
+      var ws = sgn(w, 1e-6), as = sgn(a, 1e-6);
+      var m = as === 0 ? 'const' : (ws === as ? 'up' : 'down');
+      return {type: 'graph', w0: w0, a: a, t: t, ans: {w: ws, a: as, m: m, wv: ws, av: as}};
+    }
+    return {type: 'graph', w0: -6, a: 1, t: 3, ans: {w: -1, a: 1, m: 'down', wv: -1, av: 1}};
+  }
+
+  function activeKeys(){ return vecOn() ? ['w', 'a', 'm', 'wv', 'av'] : ['w', 'a', 'm']; }
+
+  function clearMarks(){
+    for (var key in BTN){
+      for (var k = 0; k < BTN[key].length; k++){
+        var b = BTN[key][k].btn;
+        b.classList.remove('is-correct'); b.classList.remove('is-wrong');
+        b.setAttribute('aria-pressed', 'false');
+      }
+    }
+  }
+  function markRows(){
+    var keys = activeKeys();
+    for (var i = 0; i < keys.length; i++){
+      var key = keys[i], list = BTN[key], right = P.q.ans[key];
+      for (var k = 0; k < list.length; k++){
+        list[k].btn.classList.toggle('is-correct', list[k].v === right);
+        list[k].btn.classList.toggle('is-wrong', list[k].v !== right);
+      }
+    }
+  }
+
+  function explain(q){
+    var out = [], dirW = q.ans.w > 0 ? 'counterclockwise' : 'clockwise';
+    if (q.type === 'anim'){
+      out.push('The disk turns ' + dirW + ' (seen from above), so ω is ' + signWord(q.ans.w) + '.');
+      if (q.ans.m === 'const') out.push('Its rate of turning doesn\u2019t change, so α = 0.');
+      else if (q.ans.m === 'up') out.push('It speeds up during each clip, so α has the same sign as ω: α is ' + signWord(q.ans.a) + '.');
+      else out.push('It slows down during each clip, so α has the opposite sign to ω: α is ' + signWord(q.ans.a) + '.');
+      out.push('During each clip ω goes from ' + fmtSigned(q.w0, 1) + ' to ' + fmtSigned(q.w0 + q.a * q.dur, 1) + ' rad/s, so α = ' + fmtSigned(q.a, 1) + ' rad/s².');
+    } else {
+      var w = q.w0 + q.a * q.t;
+      out.push('At t = ' + q.t + ' s the line is ' + (w > 0 ? 'above' : 'below') + ' ω = 0 (ω = ' + fmtSigned(w, 1) + ' rad/s), so ω is ' + signWord(q.ans.w) + ' and the disk turns ' + dirW + '.');
+      if (q.ans.a === 0) out.push('The line is flat, so ω isn\u2019t changing: α = 0.');
+      else out.push('The line slopes ' + (q.a > 0 ? 'upward' : 'downward') + ', so α is ' + signWord(q.ans.a) + ' (slope = ' + fmtSigned(q.a, 1) + ' rad/s²).');
+      if (q.ans.m === 'const') out.push('With α = 0 the disk turns at a constant rate.');
+      else if (q.ans.m === 'up') out.push('ω and α have the same sign, so the disk is speeding up.');
+      else out.push('ω and α have opposite signs, so the disk is slowing down.');
+    }
+    if (vecOn()){
+      out.push('Right-hand rule: curl your fingers ' + dirW + ' and your thumb points ' + (q.ans.w > 0 ? 'up' : 'down') + ', so that is the direction of ω.');
+      if (q.ans.a === 0) out.push('With α = 0 there is no α vector.');
+      else out.push('α is ' + signWord(q.ans.a) + ', so its vector points ' + (q.ans.a > 0 ? 'up' : 'down') + (q.ans.m === 'up' ? ', the same way as ω.' : ', opposite to ω.'));
+    }
+    return out;
+  }
+
+  function renderFeedback(){
+    var keys = activeKeys(), right = 0;
+    for (var i = 0; i < keys.length; i++){ if (P.answers[keys[i]] === P.q.ans[keys[i]]) right++; }
+    var head = right === keys.length ? 'All ' + keys.length + ' correct.' : right + ' of ' + keys.length + ' correct. Here is the reasoning:';
+    var lines = explain(P.q), html = '<p class="head">' + head + '</p>';
+    for (var j = 0; j < lines.length; j++) html += '<p>' + symHTML(lines[j]) + '</p>';
+    $('feedback').innerHTML = html;
+    return right === keys.length;
+  }
+
+  function newQuestion(){
+    P.q = Math.random() < 0.5 ? makeAnimQ() : makeGraphQ();
+    P.answers = {}; P.revealed = false; P.theta = 0; P.start = performance.now();
+    clearMarks();
+    $('feedback').innerHTML = '';
+    $('checkBtn').disabled = false;
+    var anim = P.q.type === 'anim';
+    $('animWrap').hidden = !anim;
+    $('graphWrap').hidden = anim;
+    $('qViewWrap').hidden = true;
+    if (anim){
+      $('pPrompt').innerHTML = symHTML('Watch the disk. What are the signs of ω and α?');
+      drawView(vP, 0, P.q.w0, P.q.a, false, A_SCALE_P);
+    } else {
+      $('pPrompt').innerHTML = 'This graph shows a spinning disk\u2019s angular velocity. Answer for the marked instant, <span class="sym">t</span> = ' + P.q.t + ' s.';
+      drawGraph(gP, P.q.w0, P.q.a, P.q.t, 'practice');
+    }
+  }
+
+  function revealGraphView(){
+    if (P.q.type !== 'graph') return;
+    $('qViewWrap').hidden = false;
+    drawView(vQ, 0, P.q.w0 + P.q.a * P.q.t, P.q.a, true, A_SCALE_P);
+    $('qViewNote').innerHTML = 'The disk at <span class="sym">t</span> = ' + P.q.t + ' s.';
+  }
+
+  $('checkBtn').addEventListener('click', function(){
+    var keys = activeKeys();
+    for (var i = 0; i < keys.length; i++){
+      if (!(keys[i] in P.answers)){
+        $('feedback').innerHTML = '<p class="warn">Choose an answer in each row first.</p>';
+        return;
+      }
+    }
+    P.revealed = true;
+    $('checkBtn').disabled = true;
+    markRows();
+    var allRight = renderFeedback();
+    P.n++; if (allRight) P.correct++;
+    $('score').textContent = 'Score: ' + P.correct + ' of ' + P.n + ' questions fully correct';
+    revealGraphView();
+  });
+  $('nextBtn').addEventListener('click', function(){ newQuestion(); });
+
+  /* ---------- vectors toggle ---------- */
+  function applyVec(){
+    document.body.classList.toggle('novec', !vecOn());
+    if (P.q && P.revealed){ markRows(); renderFeedback(); }
+  }
+  $('vecToggle').addEventListener('change', applyVec);
+
+  /* ---------- tabs ---------- */
+  var mode = 'explore';
+  function setMode(m){
+    mode = m;
+    $('tabExplore').setAttribute('aria-selected', m === 'explore' ? 'true' : 'false');
+    $('tabPractice').setAttribute('aria-selected', m === 'practice' ? 'true' : 'false');
+    $('explore').hidden = m !== 'explore';
+    $('practice').hidden = m !== 'practice';
+    if (m === 'practice'){
+      E.running = false; setPlayLabel();
+      if (!P.q) newQuestion(); else P.start = performance.now();
+    }
+  }
+  $('tabExplore').addEventListener('click', function(){ setMode('explore'); });
+  $('tabPractice').addEventListener('click', function(){ setMode('practice'); });
+
+  /* ---------- animation loop ---------- */
+  var last = performance.now();
+  function frame(now){
+    var dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+    if (mode === 'explore'){
+      if (E.running){
+        var tn = Math.min(E.t + dt, TMAX);
+        E.theta += wAt((E.t + tn) / 2) * (tn - E.t);
+        E.t = tn;
+        if (E.t >= TMAX){ E.running = false; setPlayLabel(); }
+        updateExplore();
+      }
+    } else if (P.q && P.q.type === 'anim'){
+      var tau = ((now - P.start) / 1000) % P.q.dur;
+      var w = P.q.w0 + P.q.a * tau;
+      P.theta += w * dt;
+      drawView(vP, P.theta, w, P.q.a, P.revealed, A_SCALE_P);
+      $('loopFill').style.width = (tau / P.q.dur * 100).toFixed(1) + '%';
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- init ---------- */
+  syncSliders();
+  applyVec();
+  setPlayLabel();
+  updateExplore();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
