@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interference of Two Sound Sources</title>
+<style>
+  html, body { margin: 0; background: #ffffff; color: #1c1c1c;
+    font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 10px 14px 18px; }
+  h1 { font-size: 30px; margin: 4px 0 2px; font-weight: 700; }
+  .lead { font-size: 21px; margin: 0 0 6px; color: #444; }
+  svg { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+  svg text { font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
+  #spk2 { cursor: grab; touch-action: none; outline: none; }
+  #spk2.dragging { cursor: grabbing; }
+  #spk2:focus-visible .hit { stroke: #1c1c1c; stroke-width: 3; stroke-dasharray: 6 5; }
+  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 36px; padding: 8px 4px 4px; }
+  .ctl { display: flex; align-items: center; gap: 14px; font-size: 24px; }
+  .ctl label { font-weight: 600; }
+  input[type=range] { width: 340px; max-width: 60vw; height: 36px; accent-color: #1c1c1c; }
+  button { font: inherit; font-size: 22px; font-weight: 600; padding: 8px 24px; border: 3px solid #1c1c1c;
+    background: #fff; color: #1c1c1c; border-radius: 10px; cursor: pointer; min-width: 120px; }
+  button:hover { background: #f0f0f0; }
+  button:focus-visible, input[type=range]:focus-visible { outline: 3px solid #1565c0; outline-offset: 3px; }
+  .values { font-size: 24px; color: #333; }
+  .status { margin: 10px 4px 4px; padding: 12px 18px; border-left: 12px solid #888; background: #f3f3f3; border-radius: 6px; }
+  .status .title { font-size: 28px; font-weight: 700; }
+  .status .text { font-size: 22px; margin-top: 2px; }
+  .status.c { border-color: #1b7f3b; background: #e4f3e8; }
+  .status.d { border-color: #b3261e; background: #fbe7e5; }
+  .status.p { border-color: #888; background: #f3f3f3; }
+  .note { font-size: 18px; color: #555; margin: 8px 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Interference of Two Sound Sources</h1>
+  <p class="lead">Drag speaker 2 left and right. Watch how the two waves add up for the listener.</p>
+
+  <svg id="svg" viewBox="0 0 1200 760" role="img"
+       aria-label="Waves from two speakers and their sum, with a ruler showing the path difference in wavelengths">
+    <!-- baselines -->
+    <g stroke="#b5b5b5" stroke-width="2">
+      <line id="base1" x1="210" x2="1160" y1="110" y2="110"/>
+      <line id="base2" x1="210" x2="1160" y1="265" y2="265"/>
+      <line id="base3" x1="210" x2="1160" y1="470" y2="470"/>
+    </g>
+
+    <!-- row labels -->
+    <g>
+      <text x="22" y="104" font-size="28" font-weight="700" fill="#1565c0">Speaker 1</text>
+      <text x="22" y="136" font-size="22" fill="#555">(fixed)</text>
+      <text x="22" y="259" font-size="28" font-weight="700" fill="#d81b60">Speaker 2</text>
+      <text x="22" y="291" font-size="22" fill="#555">(drag it)</text>
+      <text x="22" y="464" font-size="28" font-weight="700" fill="#1c1c1c">Total</text>
+      <text x="22" y="496" font-size="22" fill="#555">(sum of both)</text>
+    </g>
+
+    <!-- listener -->
+    <line id="listenLine" y1="50" y2="604" stroke="#8a8a8a" stroke-width="2.5" stroke-dasharray="3 7"/>
+    <text id="listenLabel" y="34" font-size="24" font-weight="600" text-anchor="middle" fill="#444">listener</text>
+
+    <!-- envelope of the total wave -->
+    <line id="env1" stroke="#7a7a7a" stroke-width="2.5" stroke-dasharray="9 7"/>
+    <line id="env2" stroke="#7a7a7a" stroke-width="2.5" stroke-dasharray="9 7"/>
+    <text id="overlapLabel" y="630" font-size="21" text-anchor="middle" fill="#555">both waves overlap</text>
+
+    <!-- waves -->
+    <path id="w1" fill="none" stroke="#1565c0" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path id="w2" fill="none" stroke="#d81b60" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path id="t1" fill="none" stroke="#1c1c1c" stroke-opacity="0.3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
+    <path id="t2" fill="none" stroke="#1c1c1c" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+
+    <!-- listener dots -->
+    <circle id="dot1" r="10" fill="#1565c0" stroke="#fff" stroke-width="2.5"/>
+    <circle id="dot2" r="10" fill="#d81b60" stroke="#fff" stroke-width="2.5"/>
+    <circle id="dot3" r="12" fill="#1c1c1c" stroke="#fff" stroke-width="2.5"/>
+
+    <!-- speaker 1 (fixed) -->
+    <g id="spk1">
+      <rect x="-48" y="-15" width="24" height="30" rx="3" fill="#1565c0"/>
+      <polygon points="-24,-15 0,-34 0,34 -24,15" fill="#1565c0"/>
+    </g>
+
+    <!-- speaker 2 (draggable) -->
+    <g id="spk2" tabindex="0" role="slider" aria-label="Speaker 2 position"
+       aria-valuemin="0.5" aria-valuemax="7" aria-valuenow="4.4">
+      <rect class="hit" x="-66" y="-52" width="76" height="104" rx="10" fill="transparent"/>
+      <rect x="-48" y="-15" width="24" height="30" rx="3" fill="#d81b60"/>
+      <polygon points="-24,-15 0,-34 0,34 -24,15" fill="#d81b60"/>
+      <text x="-28" y="-40" font-size="24" text-anchor="middle" fill="#d81b60">&#9664;&#8195;&#9654;</text>
+    </g>
+
+    <!-- ruler -->
+    <g id="ruler"></g>
+  </svg>
+
+  <div class="controls">
+    <div class="ctl">
+      <label for="freq">Frequency</label>
+      <input id="freq" type="range" min="100" max="400" step="5" value="200">
+      <span class="values"><span id="fVal">200 Hz</span> &nbsp;|&nbsp; &lambda; = <span id="lVal">1.72 m</span></span>
+    </div>
+    <button id="play" type="button">Pause</button>
+  </div>
+
+  <div id="status" class="status p" aria-live="polite">
+    <div id="statusTitle" class="title"></div>
+    <div id="statusText" class="text"></div>
+  </div>
+
+  <p class="note">Dashed lines: the largest height the total wave reaches. Both speakers face right and play the same frequency.
+    Motion is slowed 200&times; so you can see it.</p>
+</div>
+
+<script>
+(function () {
+  var NS = "http://www.w3.org/2000/svg";
+  var X0 = 210, PXM = 95, XMAX = 10;          // plot left edge (svg units), svg units per metre, plot length in metres
+  var CY1 = 110, CY2 = 265, CY3 = 470, A = 62; // row centres and wave amplitude (svg units)
+  var V = 343, SLOW = 200;                     // speed of sound (m/s), slow-motion factor
+  var X1M = 2.0, X2MIN = 0.5, X2MAX = 7.0, LISTEN = 9.3;
+  var RULER_Y = 690;
+
+  var state = { f: 200, x2: 4.4, t: 0, playing: true };
+
+  function $(id) { return document.getElementById(id); }
+  var svg = $("svg"), spk1 = $("spk1"), spk2 = $("spk2"), ruler = $("ruler");
+  var w1 = $("w1"), w2 = $("w2"), t1 = $("t1"), t2 = $("t2");
+  var dot1 = $("dot1"), dot2 = $("dot2"), dot3 = $("dot3");
+  var env1 = $("env1"), env2 = $("env2"), overlapLabel = $("overlapLabel");
+  var freq = $("freq"), playBtn = $("play");
+
+  function px(m) { return X0 + PXM * m; }
+  function lam() { return V / state.f; }
+
+  // ---------- drawing helpers ----------
+  function wavePath(xs, xe, cy, fn) {
+    var n = Math.max(2, Math.ceil((px(xe) - px(xs)) / 3));
+    var d = "", i, m, y;
+    for (i = 0; i <= n; i++) {
+      m = xs + (xe - xs) * i / n;
+      y = cy - A * fn(m);
+      d += (i === 0 ? "M" : "L") + px(m).toFixed(1) + " " + y.toFixed(1);
+    }
+    return d;
+  }
+
+  function setLine(el, x1, y1, x2, y2) {
+    el.setAttribute("x1", x1); el.setAttribute("x2", x2);
+    el.setAttribute("y1", y1); el.setAttribute("y2", y2);
+  }
+
+  // ---------- classification of the path difference ----------
+  function classify(d) {
+    var r = Math.round(d);
+    if (Math.abs(d - r) < 0.02) { return { type: "c", n: r }; }
+    var h = Math.floor(d);
+    if (Math.abs(d - h - 0.5) < 0.02) { return { type: "d", n: h }; }
+    return { type: "p" };
+  }
+
+  function lamText(d, cls) {
+    if (cls.type === "c") { return cls.n === 0 ? "0" : cls.n + " \u03BB"; }
+    if (cls.type === "d") { return (cls.n > 0 ? cls.n : "") + "\u00BD \u03BB"; }
+    return d.toFixed(2) + " \u03BB";
+  }
+
+  // ---------- ruler (path difference measured in wavelengths) ----------
+  function renderRuler() {
+    var l = lam(), x1 = X1M, x2 = state.x2, half = l / 2;
+    var nMin = Math.ceil((0 - x1) / half - 1e-9), nMax = Math.floor((XMAX - x1) / half + 1e-9);
+    var h = "", i, m, big, delta = Math.abs(x2 - x1), d = delta / l, cls = classify(d);
+
+    h += '<line x1="' + px(0) + '" x2="' + px(XMAX) + '" y1="' + RULER_Y + '" y2="' + RULER_Y + '" stroke="#444" stroke-width="3"/>';
+    for (i = nMin; i <= nMax; i++) {
+      m = x1 + i * half;
+      big = (i % 2 === 0);
+      h += '<line x1="' + px(m).toFixed(1) + '" x2="' + px(m).toFixed(1) + '" y1="' + RULER_Y + '" y2="' + (RULER_Y + (big ? 22 : 12)) +
+           '" stroke="#444" stroke-width="3"/>';
+      if (big) {
+        h += '<text x="' + px(m).toFixed(1) + '" y="' + (RULER_Y + 50) + '" font-size="22" text-anchor="middle" fill="#444">' +
+             (i === 0 ? "0" : Math.abs(i / 2) + "\u03BB") + '</text>';
+      }
+    }
+    // path-difference segment between the two speakers
+    var xa = px(Math.min(x1, x2)), xb = px(Math.max(x1, x2));
+    h += '<line x1="' + xa.toFixed(1) + '" x2="' + xb.toFixed(1) + '" y1="' + RULER_Y + '" y2="' + RULER_Y +
+         '" stroke="#6b6b6b" stroke-width="10"/>';
+    h += '<circle cx="' + px(x1).toFixed(1) + '" cy="' + RULER_Y + '" r="13" fill="#1565c0" stroke="#fff" stroke-width="3"/>';
+    h += '<circle cx="' + px(x2).toFixed(1) + '" cy="' + RULER_Y + '" r="13" fill="#d81b60" stroke="#fff" stroke-width="3"/>';
+
+    var label = "\u0394 = " + delta.toFixed(2) + " m = " + lamText(d, cls);
+    var cx = Math.max(px(0) + 150, Math.min(px(XMAX) - 150, (xa + xb) / 2));
+    h += '<text x="' + cx.toFixed(1) + '" y="' + (RULER_Y - 26) + '" font-size="28" font-weight="700" text-anchor="middle" fill="#1c1c1c">' + label + '</text>';
+    ruler.innerHTML = h;
+  }
+
+  // ---------- readout text ----------
+  function renderReadout() {
+    var l = lam(), delta = Math.abs(state.x2 - X1M), d = delta / l, cls = classify(d);
+    var amp = Math.round(Math.abs(Math.cos(Math.PI * d)) * 100);
+    var st = $("status"), title = $("statusTitle"), text = $("statusText");
+    $("fVal").textContent = state.f + " Hz";
+    $("lVal").textContent = l.toFixed(2) + " m";
+    st.className = "status " + cls.type;
+    if (cls.type === "c") {
+      title.textContent = "Constructive interference";
+      text.textContent = "Path difference \u0394 = " + lamText(d, cls) + ". The waves are in step: crests meet crests, so the total is as large as it can be (twice one speaker).";
+    } else if (cls.type === "d") {
+      title.textContent = "Destructive interference";
+      text.textContent = "Path difference \u0394 = " + lamText(d, cls) + ". The waves are exactly opposite: crests meet troughs, so they cancel.";
+    } else {
+      title.textContent = "Partial interference";
+      text.textContent = "Path difference \u0394 = " + d.toFixed(2) + " \u03BB. The total is " + amp + "% of its largest possible height. Drag until \u0394 is a whole number of \u03BB or a half-step like \u00BD\u03BB, 1\u00BD\u03BB.";
+    }
+  }
+
+  // ---------- main render (runs every animation frame) ----------
+  function render() {
+    var l = lam(), x1 = X1M, x2 = state.x2;
+    var lo = Math.min(x1, x2), hi = Math.max(x1, x2);
+    var ph = 2 * Math.PI * (state.f / SLOW) * state.t;
+    var K = 2 * Math.PI / l;
+
+    function w(m, xs) { return Math.cos(K * (m - xs) - ph); }
+    function f1(m) { return w(m, x1); }
+    function f2(m) { return w(m, x2); }
+    function ft(m) {
+      var s = 0;
+      if (m >= x1 - 1e-9) { s += w(m, x1); }
+      if (m >= x2 - 1e-9) { s += w(m, x2); }
+      return s;
+    }
+
+    w1.setAttribute("d", wavePath(x1, XMAX, CY1, f1));
+    w2.setAttribute("d", wavePath(x2, XMAX, CY2, f2));
+    if (hi - lo > 0.002) {
+      t1.setAttribute("d", wavePath(lo, hi - 0.0001, CY3, ft));
+    } else {
+      t1.setAttribute("d", "");
+    }
+    t2.setAttribute("d", wavePath(hi, XMAX, CY3, ft));
+
+    // listener dots
+    var xl = px(LISTEN);
+    dot1.setAttribute("cx", xl); dot1.setAttribute("cy", (CY1 - A * f1(LISTEN)).toFixed(1));
+    dot2.setAttribute("cx", xl); dot2.setAttribute("cy", (CY2 - A * f2(LISTEN)).toFixed(1));
+    dot3.setAttribute("cx", xl); dot3.setAttribute("cy", (CY3 - A * ft(LISTEN)).toFixed(1));
+
+    // envelope of the total wave in the overlap region
+    var d = Math.abs(x2 - x1) / l;
+    var E = 2 * A * Math.abs(Math.cos(Math.PI * d));
+    setLine(env1, px(hi), CY3 - E, px(XMAX), CY3 - E);
+    setLine(env2, px(hi), CY3 + E, px(XMAX), CY3 + E);
+    overlapLabel.setAttribute("x", ((px(hi) + px(XMAX)) / 2).toFixed(1));
+  }
+
+  function update() {
+    spk2.setAttribute("transform", "translate(" + px(state.x2).toFixed(1) + " " + CY2 + ")");
+    spk2.setAttribute("aria-valuenow", state.x2.toFixed(2));
+    renderRuler();
+    renderReadout();
+    render();
+  }
+
+  // ---------- speaker 2 position (with a gentle snap to half-wavelengths) ----------
+  function setX2(m) {
+    var l = lam(), d = (m - X1M) / l, h = Math.round(d * 2) / 2;
+    if (Math.abs(d - h) < 0.05) { m = X1M + h * l; }
+    state.x2 = Math.max(X2MIN, Math.min(X2MAX, m));
+    update();
+  }
+
+  var dragging = false, dragOff = 0;
+  function svgX(e) {
+    var pt = svg.createSVGPoint();
+    pt.x = e.clientX; pt.y = e.clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse()).x;
+  }
+  spk2.addEventListener("pointerdown", function (e) {
+    dragging = true;
+    dragOff = svgX(e) - px(state.x2);
+    spk2.classList.add("dragging");
+    if (spk2.setPointerCapture) { spk2.setPointerCapture(e.pointerId); }
+    e.preventDefault();
+  });
+  spk2.addEventListener("pointermove", function (e) {
+    if (!dragging) { return; }
+    setX2((svgX(e) - dragOff - X0) / PXM);
+  });
+  function endDrag() { dragging = false; spk2.classList.remove("dragging"); }
+  spk2.addEventListener("pointerup", endDrag);
+  spk2.addEventListener("pointercancel", endDrag);
+  spk2.addEventListener("keydown", function (e) {
+    var dir = 0, l = lam(), d, k;
+    if (e.key === "ArrowLeft" || e.key === "ArrowDown") { dir = -1; }
+    if (e.key === "ArrowRight" || e.key === "ArrowUp") { dir = 1; }
+    if (!dir) { return; }
+    e.preventDefault();
+    if (e.shiftKey) {                       // fine step, no snapping
+      state.x2 = Math.max(X2MIN, Math.min(X2MAX, state.x2 + dir * 0.05));
+      update();
+    } else {                                // jump to the next half-wavelength mark
+      d = (state.x2 - X1M) / l * 2;
+      k = dir > 0 ? Math.floor(d + 1e-6) + 1 : Math.ceil(d - 1e-6) - 1;
+      setX2(X1M + k * l / 2);
+    }
+  });
+
+  // ---------- controls ----------
+  freq.addEventListener("input", function () {
+    state.f = parseInt(freq.value, 10);
+    update();
+  });
+
+  function setPlaying(p) {
+    state.playing = p;
+    playBtn.textContent = p ? "Pause" : "Play";
+  }
+  playBtn.addEventListener("click", function () { setPlaying(!state.playing); });
+
+  // ---------- animation loop ----------
+  var last = null;
+  function frame(ts) {
+    if (state.playing) {
+      if (last !== null) { state.t += (ts - last) / 1000; }
+      last = ts;
+      render();
+    } else {
+      last = null;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // ---------- start ----------
+  spk1.setAttribute("transform", "translate(" + px(X1M) + " " + CY1 + ")");
+  setLine($("listenLine"), px(LISTEN), 50, px(LISTEN), 604);
+  $("listenLine").setAttribute("y1", 50); $("listenLine").setAttribute("y2", 604);
+  $("listenLabel").setAttribute("x", px(LISTEN));
+  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setPlaying(false); }
+  update();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
