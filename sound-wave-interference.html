@@ -5,85 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Interference of Two Sound Sources</title>
 <style>
-  html, body { margin: 0; background: #ffffff; color: #1c1c1c;
+  html, body { height: 100%; margin: 0; background: #ffffff; color: #1c1c1c;
     font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 10px 14px 18px; }
-  h1 { font-size: 30px; margin: 4px 0 2px; font-weight: 700; }
-  .lead { font-size: 21px; margin: 0 0 6px; color: #444; }
-  svg { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
+  .wrap { box-sizing: border-box; height: 100vh; height: 100dvh; max-width: 1400px; margin: 0 auto;
+    padding: 6px 14px 8px; display: flex; flex-direction: column; }
+  .head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; flex: none; }
+  h1 { font-size: 24px; margin: 0; font-weight: 700; }
+  .lead { font-size: 17px; margin: 0; color: #444; }
+  svg { display: block; width: 100%; flex: 1 1 auto; min-height: 0; user-select: none; -webkit-user-select: none; }
   svg text { font-family: "Segoe UI", system-ui, -apple-system, Helvetica, Arial, sans-serif; }
   #spk2 { cursor: grab; touch-action: none; outline: none; }
   #spk2.dragging { cursor: grabbing; }
   #spk2:focus-visible .hit { stroke: #1c1c1c; stroke-width: 3; stroke-dasharray: 6 5; }
-  .controls { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 36px; padding: 8px 4px 4px; }
-  .ctl { display: flex; align-items: center; gap: 14px; font-size: 24px; }
+  .bottom { flex: none; display: flex; flex-wrap: wrap; align-items: stretch; gap: 8px 22px; padding-top: 4px; }
+  .controls { display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+  .ctl { display: flex; align-items: center; gap: 12px; font-size: 19px; flex-wrap: wrap; }
   .ctl label { font-weight: 600; }
-  input[type=range] { width: 340px; max-width: 60vw; height: 36px; accent-color: #1c1c1c; }
-  button { font: inherit; font-size: 22px; font-weight: 600; padding: 8px 24px; border: 3px solid #1c1c1c;
-    background: #fff; color: #1c1c1c; border-radius: 10px; cursor: pointer; min-width: 120px; }
+  input[type=range] { width: 260px; max-width: 50vw; height: 26px; accent-color: #1c1c1c; }
+  button { font: inherit; font-size: 18px; font-weight: 600; padding: 4px 20px; border: 3px solid #1c1c1c;
+    background: #fff; color: #1c1c1c; border-radius: 10px; cursor: pointer; min-width: 100px; }
   button:hover { background: #f0f0f0; }
   button:focus-visible, input[type=range]:focus-visible { outline: 3px solid #1565c0; outline-offset: 3px; }
-  .values { font-size: 24px; color: #333; }
-  .status { margin: 10px 4px 4px; padding: 12px 18px; border-left: 12px solid #888; background: #f3f3f3; border-radius: 6px; }
-  .status .title { font-size: 28px; font-weight: 700; }
-  .status .text { font-size: 22px; margin-top: 2px; }
+  .values { font-size: 19px; color: #333; }
+  .status { flex: 1 1 420px; padding: 6px 14px; border-left: 10px solid #888; background: #f3f3f3; border-radius: 6px; }
+  .status .title { font-size: 22px; font-weight: 700; }
+  .status .text { font-size: 17px; margin-top: 1px; line-height: 1.3; }
   .status.c { border-color: #1b7f3b; background: #e4f3e8; }
   .status.d { border-color: #b3261e; background: #fbe7e5; }
   .status.p { border-color: #888; background: #f3f3f3; }
-  .note { font-size: 18px; color: #555; margin: 8px 4px 0; }
+  .note { flex: none; font-size: 14px; color: #555; margin: 4px 2px 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Interference of Two Sound Sources</h1>
-  <p class="lead">Drag speaker 2 left and right. Watch how the two waves add up for the listener.</p>
+  <div class="head">
+    <h1>Interference of Two Sound Sources</h1>
+    <p class="lead">Drag speaker 2 left and right. Watch how the two waves add up for the listener.</p>
+  </div>
 
-  <svg id="svg" viewBox="0 0 1200 760" role="img"
+  <svg id="svg" viewBox="0 0 1200 670" preserveAspectRatio="xMidYMid meet" role="img"
        aria-label="Waves from two speakers and their sum, with a ruler showing the path difference in wavelengths">
-    <!-- baselines -->
     <g stroke="#b5b5b5" stroke-width="2">
-      <line id="base1" x1="210" x2="1160" y1="110" y2="110"/>
-      <line id="base2" x1="210" x2="1160" y1="265" y2="265"/>
-      <line id="base3" x1="210" x2="1160" y1="470" y2="470"/>
+      <line x1="210" x2="1160" y1="95" y2="95"/>
+      <line x1="210" x2="1160" y1="225" y2="225"/>
+      <line x1="210" x2="1160" y1="395" y2="395"/>
     </g>
 
-    <!-- row labels -->
     <g>
-      <text x="22" y="104" font-size="28" font-weight="700" fill="#1565c0">Speaker 1</text>
-      <text x="22" y="136" font-size="22" fill="#555">(fixed)</text>
-      <text x="22" y="259" font-size="28" font-weight="700" fill="#d81b60">Speaker 2</text>
-      <text x="22" y="291" font-size="22" fill="#555">(drag it)</text>
-      <text x="22" y="464" font-size="28" font-weight="700" fill="#1c1c1c">Total</text>
-      <text x="22" y="496" font-size="22" fill="#555">(sum of both)</text>
+      <text x="22" y="89" font-size="28" font-weight="700" fill="#1565c0">Speaker 1</text>
+      <text x="22" y="121" font-size="22" fill="#555">(fixed)</text>
+      <text x="22" y="219" font-size="28" font-weight="700" fill="#d81b60">Speaker 2</text>
+      <text x="22" y="251" font-size="22" fill="#555">(drag it)</text>
+      <text x="22" y="389" font-size="28" font-weight="700" fill="#1c1c1c">Total</text>
+      <text x="22" y="421" font-size="22" fill="#555">(sum of both)</text>
     </g>
 
-    <!-- listener -->
-    <line id="listenLine" y1="50" y2="604" stroke="#8a8a8a" stroke-width="2.5" stroke-dasharray="3 7"/>
-    <text id="listenLabel" y="34" font-size="24" font-weight="600" text-anchor="middle" fill="#444">listener</text>
+    <line id="listenLine" y1="45" y2="512" stroke="#8a8a8a" stroke-width="2.5" stroke-dasharray="3 7"/>
+    <text id="listenLabel" y="28" font-size="24" font-weight="600" text-anchor="middle" fill="#444">listener</text>
 
-    <!-- envelope of the total wave -->
     <line id="env1" stroke="#7a7a7a" stroke-width="2.5" stroke-dasharray="9 7"/>
     <line id="env2" stroke="#7a7a7a" stroke-width="2.5" stroke-dasharray="9 7"/>
-    <text id="overlapLabel" y="630" font-size="21" text-anchor="middle" fill="#555">both waves overlap</text>
+    <text id="overlapLabel" y="534" font-size="21" text-anchor="middle" fill="#555">both waves overlap</text>
 
-    <!-- waves -->
     <path id="w1" fill="none" stroke="#1565c0" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
     <path id="w2" fill="none" stroke="#d81b60" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
     <path id="t1" fill="none" stroke="#1c1c1c" stroke-opacity="0.3" stroke-width="5" stroke-linejoin="round" stroke-linecap="round"/>
     <path id="t2" fill="none" stroke="#1c1c1c" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
 
-    <!-- listener dots -->
     <circle id="dot1" r="10" fill="#1565c0" stroke="#fff" stroke-width="2.5"/>
     <circle id="dot2" r="10" fill="#d81b60" stroke="#fff" stroke-width="2.5"/>
     <circle id="dot3" r="12" fill="#1c1c1c" stroke="#fff" stroke-width="2.5"/>
 
-    <!-- speaker 1 (fixed) -->
     <g id="spk1">
       <rect x="-48" y="-15" width="24" height="30" rx="3" fill="#1565c0"/>
       <polygon points="-24,-15 0,-34 0,34 -24,15" fill="#1565c0"/>
     </g>
 
-    <!-- speaker 2 (draggable) -->
     <g id="spk2" tabindex="0" role="slider" aria-label="Speaker 2 position"
        aria-valuemin="0.5" aria-valuemax="7" aria-valuenow="4.4">
       <rect class="hit" x="-66" y="-52" width="76" height="104" rx="10" fill="transparent"/>
@@ -92,36 +89,35 @@
       <text x="-28" y="-40" font-size="24" text-anchor="middle" fill="#d81b60">&#9664;&#8195;&#9654;</text>
     </g>
 
-    <!-- ruler -->
     <g id="ruler"></g>
   </svg>
 
-  <div class="controls">
-    <div class="ctl">
-      <label for="freq">Frequency</label>
-      <input id="freq" type="range" min="100" max="400" step="5" value="200">
-      <span class="values"><span id="fVal">200 Hz</span> &nbsp;|&nbsp; &lambda; = <span id="lVal">1.72 m</span></span>
+  <div class="bottom">
+    <div class="controls">
+      <div class="ctl">
+        <label for="freq">Frequency</label>
+        <input id="freq" type="range" min="100" max="400" step="5" value="200">
+        <span class="values"><span id="fVal">200 Hz</span> &nbsp;|&nbsp; &lambda; = <span id="lVal">1.72 m</span></span>
+        <button id="play" type="button">Pause</button>
+      </div>
     </div>
-    <button id="play" type="button">Pause</button>
+    <div id="status" class="status p" aria-live="polite">
+      <div id="statusTitle" class="title"></div>
+      <div id="statusText" class="text"></div>
+    </div>
   </div>
 
-  <div id="status" class="status p" aria-live="polite">
-    <div id="statusTitle" class="title"></div>
-    <div id="statusText" class="text"></div>
-  </div>
-
-  <p class="note">Dashed lines: the largest height the total wave reaches. Both speakers face right and play the same frequency.
-    Motion is slowed 200&times; so you can see it.</p>
+  <p class="note">Dashed lines: largest height the total wave reaches. Both speakers face right and play the same frequency. Motion is slowed 200&times;.</p>
 </div>
 
 <script>
 (function () {
   var NS = "http://www.w3.org/2000/svg";
   var X0 = 210, PXM = 95, XMAX = 10;          // plot left edge (svg units), svg units per metre, plot length in metres
-  var CY1 = 110, CY2 = 265, CY3 = 470, A = 62; // row centres and wave amplitude (svg units)
+  var CY1 = 95, CY2 = 225, CY3 = 395, A = 55; // row centres and wave amplitude (svg units)
   var V = 343, SLOW = 200;                     // speed of sound (m/s), slow-motion factor
   var X1M = 2.0, X2MIN = 0.5, X2MAX = 7.0, LISTEN = 9.3;
-  var RULER_Y = 690;
+  var RULER_Y = 600;
 
   var state = { f: 200, x2: 4.4, t: 0, playing: true };
 
@@ -336,8 +332,7 @@
 
   // ---------- start ----------
   spk1.setAttribute("transform", "translate(" + px(X1M) + " " + CY1 + ")");
-  setLine($("listenLine"), px(LISTEN), 50, px(LISTEN), 604);
-  $("listenLine").setAttribute("y1", 50); $("listenLine").setAttribute("y2", 604);
+  setLine($("listenLine"), px(LISTEN), 45, px(LISTEN), 512);
   $("listenLabel").setAttribute("x", px(LISTEN));
   if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) { setPlaying(false); }
   update();
